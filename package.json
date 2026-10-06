@@ -1,0 +1,31 @@
+{
+  "name": "quickpo",
+  "version": "0.1.0",
+  "description": "QuickPo - one-click project launcher for Windows",
+  "main": "src/main/main.js",
+  "scripts": {
+    "test": "node --test test/**/*.test.js",
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abhinav-Krishna-P/QuickPo.git"
+  },
+  "keywords": [],
+  "author": "Abhinav Krishna P <abhinavkrishna.p67@gmail.com>",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Abhinav-Krishna-P/QuickPo/issues"
+  },
+  "homepage": "https://github.com/Abhinav-Krishna-P/QuickPo#readme",
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "node-pty": "^1.1.0"
+  }
+}

@@ -1,0 +1,6 @@
+node_modules/
+dist/
+
+# local tooling and media work, not part of the app
+ad/
+docs/
