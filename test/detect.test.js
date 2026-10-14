@@ -33,3 +33,12 @@ test('laravel, django, docker, unknown', () => {
   assert.equal(guessCommand(proj({})), '');
 });
 
+test('stack detection', () => {
+  const { detectStack } = require('../src/main/detect');
+  assert.equal(detectStack(proj({ 'package.json': '{"dependencies":{"react":"1"}}' })), 'react');
+  assert.equal(detectStack(proj({ 'package.json': '{"devDependencies":{"vite":"1"}}' })), 'vite');
+  assert.equal(detectStack(proj({ 'package.json': '{}' })), 'node');
+  assert.equal(detectStack(proj({ artisan: '' })), 'laravel');
+  assert.equal(detectStack(proj({ 'go.mod': '' })), 'go');
+  assert.equal(detectStack(proj({})), 'generic');
+});
