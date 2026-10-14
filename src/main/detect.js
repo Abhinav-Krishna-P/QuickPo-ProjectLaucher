@@ -49,9 +49,39 @@ function guessCommand(root) {
   return '';
 }
 
+/** Best-effort tech stack label used for the project icon. */
+function detectStack(root) {
+  try {
+    if (exists(root, 'package.json')) {
+      const pkg = readJson(path.join(root, 'package.json')) || {};
+      const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+      if (deps.next) return 'next';
+      if (deps.react || deps['react-dom']) return 'react';
+      if (deps.vue || deps.nuxt) return 'vue';
+      if (deps['@angular/core']) return 'angular';
+      if (deps.svelte || deps['@sveltejs/kit']) return 'svelte';
+      if (deps.vite) return 'vite';
+      if (deps.electron) return 'electron';
+      return 'node';
+    }
+    if (exists(root, 'artisan')) return 'laravel';
+    if (exists(root, 'composer.json')) return 'php';
+    if (exists(root, 'manage.py')) return 'django';
+    if (exists(root, 'requirements.txt') || exists(root, 'pyproject.toml') || exists(root, 'main.py') || exists(root, 'app.py')) return 'python';
+    if (exists(root, 'go.mod')) return 'go';
+    if (exists(root, 'Cargo.toml')) return 'rust';
+    if (exists(root, 'pom.xml') || exists(root, 'build.gradle') || exists(root, 'build.gradle.kts')) return 'java';
+    if (exists(root, 'Gemfile')) return 'ruby';
+    if (exists(root, 'docker-compose.yml') || exists(root, 'docker-compose.yaml') || exists(root, 'compose.yaml') || exists(root, 'Dockerfile')) return 'docker';
+  } catch {
+    /* fall through */
+  }
+  return 'generic';
+}
+
 /** Config file wins; otherwise guess. */
 function detectCommand(root) {
   return readConfig(root) || guessCommand(root);
 }
 
-module.exports = { detectCommand, readConfig, guessCommand, CONFIG_FILE };
+module.exports = { detectCommand, detectStack, readConfig, guessCommand, CONFIG_FILE };
