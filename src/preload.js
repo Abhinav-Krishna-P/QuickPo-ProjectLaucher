@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('quickpo', {
     writeConfig: (root, command) => ipcRenderer.invoke('projects:writeConfig', root, command),
     openFolder: (root) => ipcRenderer.invoke('projects:openFolder', root),
   },
+  env: { info: () => ipcRenderer.invoke('env:info') },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     set: (patch) => ipcRenderer.invoke('settings:set', patch),

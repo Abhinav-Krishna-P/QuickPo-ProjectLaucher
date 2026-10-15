@@ -3,7 +3,8 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { Store, MAX_PROJECTS } = require('./store');
-const { detectCommand, CONFIG_FILE } = require('./detect');
+const { detectCommand, detectStack, CONFIG_FILE } = require('./detect');
+const { execFile } = require('child_process');
 const { PtyManager } = require('./pty');
 
 let win = null;
@@ -56,7 +57,12 @@ function applyLoginItem() {
 }
 
 function registerIpc() {
-  ipcMain.handle('projects:list', () => store.list());
+  ipcMain.handle('projects:list', () => store.list().map((p) => ({ ...p, stack: detectStack(p.path) })));
+  ipcMain.handle('env:info', () =>
+    new Promise((resolve) => {
+      execFile('node', ['-v'], { windowsHide: true }, (err, out) => resolve({ node: err ? '' : String(out).trim() }));
+    }),
+  );
   ipcMain.handle('projects:max', () => MAX_PROJECTS);
   ipcMain.handle('projects:add', (_e, data) => store.add(data));
   ipcMain.handle('projects:update', (_e, id, patch) => store.update(id, patch));
