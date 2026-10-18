@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;" />
+  <title>QuickPo</title>
+  <link rel="stylesheet" href="../../node_modules/@xterm/xterm/css/xterm.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <aside id="sidebar">
+    <header class="brand">
+      <img class="logo-mark" src="logo-mark.png" alt="" />
+      <div>
+        <h1>Quick<em>Po</em></h1>
+        <p>Project launcher</p>
+      </div>
+    </header>
+
+    <div class="section-head"><span>Projects</span><span id="add-hint" class="count"></span></div>
+    <ul id="project-list"></ul>
+
+    <button id="add-btn" class="add"><span class="plus"><svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"><path d="M12 5v14M5 12h14"/></svg></span><span>Add project</span><span id="add-count" class="count"></span></button>
+
+    <footer class="settings">
+      <label class="switch">
+        <span class="win-logo"></span>
+        <span class="lbl">Start with Windows</span>
+        <input type="checkbox" id="start-with-windows" />
+        <span class="track"><span class="knob"></span></span>
+      </label>
+    </footer>
+  </aside>
+
+  <main id="main">
+    <div class="topbar">
+      <div id="tabs"></div>
+      <button id="tab-add" class="tab-plus" title="Add project">+</button>
+      <span class="spacer"></span>
+      <button id="settings-btn" class="iconbtn" title="Settings">&#9881;</button>
+    </div>
+
+    <section id="workspace">
+      <div id="welcome" class="welcome">
+        <img class="logo-full" src="logo-full.png" alt="QuickPo" />
+        <h2>Welcome to QuickPo</h2>
+        <p>Add a project, pick it on the left and press play. Its console lives here.</p>
+      </div>
+
+      <div id="project-view" hidden>
+        <header class="proj-head">
+          <span id="ph-icon" class="stack-icon lg"></span>
+          <div class="ph-text">
+            <div class="ph-title"><h2 id="ph-name"></h2><span id="ph-badge" class="badge"></span></div>
+            <div class="ph-path"><span class="folder-ico"></span><span id="ph-path"></span><button id="ph-copy" class="mini" title="Copy path">&#10697;</button></div>
+          </div>
+          <div class="ph-actions">
+            <button id="ph-open" class="btn"><span class="folder-ico"></span>Open folder</button>
+            <button id="ph-edit" class="btn">&#9998; Edit config</button>
+            <button id="ph-toggle" class="btn primary">&#9654; Launch</button>
+          </div>
+        </header>
+
+        <div class="profile">
+          <span class="lbl">Launch profile</span>
+          <span class="chip"><span class="prompt">&gt;_</span><span id="ph-cmd"></span></span>
+        </div>
+
+        <div class="console">
+          <div class="console-tabs">
+            <button class="ctab active" data-view="term">&gt;_ Terminal</button>
+            <button class="ctab" data-view="logs">&#9776; Logs</button>
+            <span class="spacer"></span>
+            <button id="clear-btn" class="iconbtn" title="Clear">&#128465;</button>
+          </div>
+          <div id="terminals"></div>
+          <div id="idle" class="not-running"><p>Not running. Press <b>Launch</b> to start this project.</p></div>
+        </div>
+
+        <footer class="status-bar">
+          <span id="sb-status" class="sb-status"><i></i><span>Idle</span></span>
+          <span id="sb-cmd" class="mono"></span>
+          <span id="sb-started"></span>
+          <span class="spacer"></span>
+          <span id="sb-node"></span>
+          <span id="sb-stack"></span>
+        </footer>
+      </div>
+    </section>
+  </main>
+
+  <div id="menu" class="menu" hidden></div>
+
+  <dialog id="project-dialog">
+    <form method="dialog" id="project-form">
+      <h3 id="dialog-title">Add project</h3>
+      <label><span>Project folder</span>
+        <div class="row"><input id="f-path" type="text" readonly placeholder="Choose the project root" /><button type="button" id="f-browse" class="btn">Browse</button></div>
+      </label>
+      <label><span>Name</span><input id="f-name" type="text" placeholder="My project" /></label>
+      <label><span>Start command</span>
+        <input id="f-command" type="text" placeholder="npm run dev" class="mono" />
+        <small>Read from <code>quickpo.json</code> if present, otherwise guessed. Edit freely.</small>
+      </label>
+      <label class="check"><input id="f-save-config" type="checkbox" /><span class="box"></span>Save command to <code>quickpo.json</code> in the folder</label>
+      <label class="check"><input id="f-autostart" type="checkbox" /><span class="box"></span>Launch automatically when QuickPo opens</label>
+      <p id="f-error" class="error"></p>
+      <div class="actions"><button type="button" id="f-cancel" class="btn">Cancel</button><button type="submit" class="btn primary" id="f-save">Save</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog">
+    <form method="dialog">
+      <h3>Settings</h3>
+      <label class="check"><input id="s-start" type="checkbox" /><span class="box"></span>Start QuickPo with Windows</label>
+      <p class="hint">Projects marked <b>auto</b> launch when QuickPo opens. Put <code>{"command": "..."}</code> in a <code>quickpo.json</code> at a project root to pin its start command.</p>
+      <p class="hint" id="s-about"></p>
+      <div class="actions"><button type="submit" class="btn primary">Done</button></div>
+    </form>
+  </dialog>
+
+  <script src="../../node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="../../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="icons.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
