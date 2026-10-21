@@ -38,6 +38,8 @@ function createWindow() {
     title: 'QuickPo',
     icon: path.join(__dirname, '..', '..', 'build', 'icon.ico'),
     autoHideMenuBar: true,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: { color: '#121214', symbolColor: '#e6e6ea', height: 40 },
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload.js'),
       contextIsolation: true,
