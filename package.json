@@ -5,7 +5,8 @@
   "main": "src/main/main.js",
   "scripts": {
     "test": "node --test test/**/*.test.js",
-    "start": "electron ."
+    "start": "electron .",
+    "smoke": "node scripts/smoke.js"
   },
   "repository": {
     "type": "git",

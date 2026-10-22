@@ -11,6 +11,10 @@ let win = null;
 let store = null;
 let ptys = null;
 
+// QUICKPO_SMOKE=1: isolated userData, auto-launch a project that echoes a marker, exit 0 on success.
+const SMOKE = process.env.QUICKPO_SMOKE === '1';
+if (SMOKE) app.setPath('userData', path.join(app.getPath('temp'), 'quickpo-smoke-' + process.pid));
+
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) {
   app.quit();
@@ -107,13 +111,54 @@ function registerIpc() {
 
 app.whenReady().then(() => {
   store = new Store(path.join(app.getPath('userData'), 'projects.json'));
+  let smokeOut = '';
   ptys = new PtyManager({
-    onData: (id, data) => send('pty:data', { id, data }),
-    onExit: (id, code) => send('pty:exit', { id, code }),
+    onData: (id, data) => {
+      send('pty:data', { id, data });
+      if (SMOKE) smokeOut += data;
+    },
+    onExit: (id, code) => {
+      send('pty:exit', { id, code });
+      if (SMOKE) {
+        const ok = smokeOut.includes('SMOKE_OK');
+        console.log(ok ? 'SMOKE PASS' : 'SMOKE FAIL: marker missing', 'exit', code);
+        setTimeout(async () => {
+          // QUICKPO_SHOT=<file.png>: save a screenshot of the window for visual checks.
+          if (process.env.QUICKPO_SHOT && win) {
+            const img = await win.webContents.capturePage();
+            fs.writeFileSync(process.env.QUICKPO_SHOT, img.toPNG());
+          }
+          app.exit(ok ? 0 : 2);
+        }, 600);
+      }
+    },
   });
   registerIpc();
-  applyLoginItem();
+  if (!SMOKE) applyLoginItem();
+  if (SMOKE) {
+    store.add({ path: process.cwd(), name: 'smoke', command: 'echo SMOKE_OK && exit', autoStart: true });
+    // QUICKPO_SMOKE_EXTRA=path;path – extra idle projects, handy for screenshots.
+    for (const extra of (process.env.QUICKPO_SMOKE_EXTRA || '').split(';').filter((x) => x && fs.existsSync(x))) {
+      try { store.add({ path: extra, command: detectCommand(extra) }); } catch { /* duplicate or full */ }
+    }
+  }
   createWindow();
+  if (SMOKE) {
+    win.webContents.on('console-message', (e) => {
+      if (e.level === 'error') {
+        console.error('RENDERER ERROR:', e.message);
+        app.exit(3);
+      }
+    });
+    win.webContents.on('did-fail-load', (_e, code, desc) => {
+      console.error('LOAD FAIL', code, desc);
+      app.exit(4);
+    });
+    setTimeout(() => {
+      console.error('SMOKE TIMEOUT');
+      app.exit(5);
+    }, 20000);
+  }
 });
 
 app.on('window-all-closed', () => {
