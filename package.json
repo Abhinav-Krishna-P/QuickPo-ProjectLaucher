@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --test test/**/*.test.js",
     "start": "electron .",
+    "dist": "electron-builder --win",
     "smoke": "node scripts/smoke.js"
   },
   "repository": {
@@ -28,5 +29,52 @@
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
     "node-pty": "^1.1.0"
+  },
+  "productName": "QuickPo",
+  "build": {
+    "appId": "com.abhinavkrishna.quickpo",
+    "productName": "QuickPo",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "node_modules/**/*",
+      "!node_modules/**/*.pdb",
+      "!node_modules/**/{test,tests,docs,example,examples}/**"
+    ],
+    "asarUnpack": [
+      "node_modules/node-pty/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "${productName}-${version}-${arch}-${os}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "shortcutName": "QuickPo"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-portable.exe"
+    },
+    "npmRebuild": false
   }
 }
