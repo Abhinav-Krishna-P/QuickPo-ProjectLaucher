@@ -143,6 +143,45 @@ app.whenReady().then(() => {
     }
   }
   createWindow();
+  // QUICKPO_RECORD=<dir>: resize + zoom the window, run QUICKPO_DEBUG_SCRIPT in the renderer (async, drives the UI),
+  // capture PNG frames at QUICKPO_RECORD_FPS for QUICKPO_RECORD_SECS, then exit. Used for the product video.
+  if (!SMOKE && process.env.QUICKPO_RECORD) {
+    const dir = process.env.QUICKPO_RECORD;
+    const fps = Number(process.env.QUICKPO_RECORD_FPS || 25);
+    const secs = Number(process.env.QUICKPO_RECORD_SECS || 8);
+    const zoom = Number(process.env.QUICKPO_RECORD_ZOOM || 1.4);
+    fs.mkdirSync(dir, { recursive: true });
+    win.setSize(Number(process.env.QUICKPO_RECORD_W || 1600), Number(process.env.QUICKPO_RECORD_H || 1000));
+    win.center();
+    win.webContents.once('did-finish-load', () => {
+      win.webContents.setZoomFactor(zoom);
+      setTimeout(async () => {
+        if (process.env.QUICKPO_DEBUG_SCRIPT) {
+          win.webContents.executeJavaScript(fs.readFileSync(process.env.QUICKPO_DEBUG_SCRIPT, 'utf8')).catch((e) => console.error('script failed', e.message));
+        }
+        const total = Math.round(fps * secs);
+        const t0 = Date.now();
+        for (let i = 0; i < total; i++) {
+          const due = t0 + (i * 1000) / fps;
+          const wait = due - Date.now();
+          if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+          let img = null;
+          for (let attempt = 0; attempt < 5 && !img; attempt++) {
+            try {
+              img = await win.webContents.capturePage();
+            } catch (e) {
+              await new Promise((r) => setTimeout(r, 30)); // transient viz errors: retry
+            }
+          }
+          if (img) fs.writeFileSync(path.join(dir, `f${String(i).padStart(4, '0')}.png`), img.toPNG());
+          else if (i > 0) fs.copyFileSync(path.join(dir, `f${String(i - 1).padStart(4, '0')}.png`), path.join(dir, `f${String(i).padStart(4, '0')}.png`));
+        }
+        console.log('RECORDED', total, 'frames at', fps, 'fps, size', JSON.stringify(win.getContentSize()));
+        ptys.killAll();
+        app.exit(0);
+      }, 1200);
+    });
+  }
   // QUICKPO_DEBUG=1: echo renderer console to stdout; with QUICKPO_SHOT, screenshot after 4s and exit.
   if (!SMOKE && process.env.QUICKPO_DEBUG === '1') {
     win.webContents.on('console-message', (e) => console.log(`RENDERER[${e.level}] ${e.message} (${e.sourceId}:${e.lineNumber})`));
