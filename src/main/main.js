@@ -143,6 +143,31 @@ app.whenReady().then(() => {
     }
   }
   createWindow();
+  // QUICKPO_DEBUG=1: echo renderer console to stdout; with QUICKPO_SHOT, screenshot after 4s and exit.
+  if (!SMOKE && process.env.QUICKPO_DEBUG === '1') {
+    win.webContents.on('console-message', (e) => console.log(`RENDERER[${e.level}] ${e.message} (${e.sourceId}:${e.lineNumber})`));
+    if (process.env.QUICKPO_SHOT) {
+      setTimeout(async () => {
+        // QUICKPO_DEBUG_SCRIPT=<file.js>: run in the renderer first (async), result logged.
+        if (process.env.QUICKPO_DEBUG_SCRIPT) {
+          const r = await win.webContents.executeJavaScript(fs.readFileSync(process.env.QUICKPO_DEBUG_SCRIPT, 'utf8')).catch((e) => 'script failed: ' + e.message);
+          console.log('SCRIPT', JSON.stringify(r));
+        }
+        const diag = await win.webContents
+          .executeJavaScript(`JSON.stringify({
+            projects: document.querySelectorAll('.project').length,
+            tabs: document.querySelectorAll('.tab').length,
+            selected: document.getElementById('ph-name')?.textContent || null,
+            readyState: document.readyState,
+          })`)
+          .catch((e) => 'diag failed: ' + e.message);
+        console.log('DIAG', diag);
+        fs.writeFileSync(process.env.QUICKPO_SHOT, (await win.webContents.capturePage()).toPNG());
+        ptys.killAll();
+        app.exit(0);
+      }, 4000);
+    }
+  }
   if (SMOKE) {
     win.webContents.on('console-message', (e) => {
       if (e.level === 'error') {
