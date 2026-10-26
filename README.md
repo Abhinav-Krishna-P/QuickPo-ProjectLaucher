@@ -80,6 +80,7 @@ Stack: Electron, node-pty (ConPTY), xterm.js, electron-builder.
 
 ```
 src/main/main.js       Electron main: window, IPC, auto-start, smoke/debug/record modes
+scripts/smoke.js       runs the headless smoke check
 src/main/store.js      projects + settings persistence (userData/projects.json)
 src/main/detect.js     quickpo.json reader, start-command guesser, tech-stack detection
 src/main/pty.js        one PTY per project, kills the process tree on stop
@@ -88,7 +89,6 @@ src/renderer/          sidebar, tabs, project header, terminal + logs view, dial
 src/renderer/icons.js  tech-stack SVG icons
 build/                 app icon
 assets/                logo and poster
-ad/                    launch video + poster sources (voice-over, SFX, composition, renderer)
 test/                  node --test unit tests
 ```
 
