@@ -6,7 +6,9 @@
 <p align="center"><b>Project launcher for Windows.</b> Add your projects once, hit Launch, watch live logs in built-in terminals.</p>
 
 <p align="center">
-  <a href="https://github.com/Abhinav-Krishna-P/QuickPo/releases/latest"><b>⬇ Download the latest .exe</b></a>
+  <a href="https://github.com/Abhinav-Krishna-P/QuickPo-ProjectLaucher/releases/tag/v0.1.0"><b>⬇ Download installer</b></a>
+  &nbsp;·&nbsp; <a href="https://github.com/Abhinav-Krishna-P/QuickPo-ProjectLaucher/releases/tag/v0.1.0-portable"><b>⬇ Download portable</b></a>
+  <br>
   &nbsp;·&nbsp; Windows 10 / 11 &nbsp;·&nbsp; Any tech stack &nbsp;·&nbsp; Up to 5 projects &nbsp;·&nbsp; No server required
 </p>
 
@@ -32,11 +34,11 @@ QuickPo removes that loop. Register a project once and it is one click away, wit
 
 ## Install
 
-1. Go to the **[Releases page](https://github.com/Abhinav-Krishna-P/QuickPo/releases/latest)** and download the `.exe` attached to the latest release:
-   - `QuickPo-<version>-x64-win.exe` – **installer** (adds a Start Menu entry and a desktop shortcut). Recommended.
-   - `QuickPo-<version>-portable.exe` – **portable**, runs without installing.
+1. Download the build you want from the [Releases page](https://github.com/Abhinav-Krishna-P/QuickPo-ProjectLaucher/releases). Each one is its own release:
+   - **Installer**, from the [QuickPo 0.1.0 - Installer](https://github.com/Abhinav-Krishna-P/QuickPo-ProjectLaucher/releases/tag/v0.1.0) release: `QuickPo-0.1.0-x64-win.exe`. It adds a Start Menu entry, a desktop shortcut and an uninstaller. Recommended.
+   - **Portable**, from the [QuickPo 0.1.0 - Portable](https://github.com/Abhinav-Krishna-P/QuickPo-ProjectLaucher/releases/tag/v0.1.0-portable) release: `QuickPo-0.1.0-portable.exe`. It needs no install, so you can keep it anywhere and double-click to run.
 2. Run the file. If Windows SmartScreen shows *"Windows protected your PC"*, click **More info → Run anyway**. The build is not code-signed yet, which is why SmartScreen asks.
-3. Follow the installer (you can change the install folder), then launch **QuickPo** from the Start Menu or desktop.
+3. For the installer, follow the setup (you can change the install folder), then launch **QuickPo** from the Start Menu or desktop. The portable exe opens straight away.
 
 Your project list and settings are stored in `%APPDATA%\QuickPo\projects.json`, so they survive reinstalls and updates.
 
@@ -65,8 +67,8 @@ Anything that works in `cmd.exe` works here, for example `docker compose up`, `p
 Requirements: Node.js 20+ and npm. No Visual Studio or Python needed; the native console module ships prebuilt.
 
 ```bash
-git clone https://github.com/Abhinav-Krishna-P/QuickPo.git
-cd QuickPo
+git clone https://github.com/Abhinav-Krishna-P/QuickPo-ProjectLaucher.git
+cd QuickPo-ProjectLaucher
 npm install
 npm start          # run the app in development
 npm test           # unit tests (project store + command/stack detection)
