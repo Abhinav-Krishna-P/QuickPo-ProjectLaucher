@@ -1,6 +1,6 @@
 {
   "name": "quickpo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "QuickPo - one-click project launcher for Windows",
   "main": "src/main/main.js",
   "scripts": {
