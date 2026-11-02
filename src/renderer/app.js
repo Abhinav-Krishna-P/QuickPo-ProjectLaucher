@@ -36,6 +36,47 @@
   const icon = (stack) => STACK_ICONS[stack] || STACK_ICONS.generic;
   const fmtTime = (d) => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const cleanError = (err) => String(err && err.message ? err.message : err).replace(/^.*Error: /, '');
+  // Preview URL detection over the rendered terminal lines. Ranking (later lines win ties):
+  // "Preview URL: ..." (Shopify CLI) > "Local: http://localhost..." > any loopback > LAN IP.
+  const ANY_URL = /https?:\/\/[^\s'"<>│|]+/i;
+  const LOOPBACK = /^https?:\/\/(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1?\])(?::\d+)?(?:\/|$)/i;
+  const LAN = /^https?:\/\/\d{1,3}(?:\.\d{1,3}){3}:\d+/;
+  const cleanUrl = (u) => u.replace(/[).,;:]+$/, '').replace(/\/\/(?:0\.0\.0\.0|\[::\])/, '//localhost');
+  function pickPreviewUrl(lines) {
+    let best = null;
+    let bestScore = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      let m = line.match(ANY_URL);
+      let score = 0;
+      if (/preview url/i.test(line)) {
+        if (!m && lines[i + 1]) m = lines[i + 1].trim().match(/^https?:\/\/[^\s'"<>│|]+/i);
+        if (m) score = 4;
+      } else if (m && LOOPBACK.test(cleanUrl(m[0])) && !/graphiql/i.test(line)) {
+        score = /\blocal\b/i.test(line) ? 3 : 2;
+      } else if (m && LAN.test(m[0])) {
+        score = 1;
+      }
+      if (score && score >= bestScore) {
+        best = cleanUrl(m[0]);
+        bestScore = score;
+      }
+    }
+    return best && { url: best, score: bestScore };
+  }
+  // Rendered xterm buffer as logical lines (soft-wrapped rows joined back together).
+  function bufferLines(term) {
+    const buf = term.buffer.active;
+    const out = [];
+    for (let y = 0; y < buf.length; y++) {
+      const row = buf.getLine(y);
+      if (!row) continue;
+      const text = row.translateToString(true);
+      if (row.isWrapped && out.length) out[out.length - 1] += text;
+      else out.push(text);
+    }
+    return out;
+  }
 
   // ---------- Projects list ----------
   async function refreshProjects() {
@@ -122,6 +163,10 @@
     $('#sb-started').textContent = s?.startedAt ? `Started ${fmtTime(s.startedAt)}` : '';
     $('#sb-node').textContent = nodeVersion ? `Node ${nodeVersion}` : '';
     $('#sb-stack').textContent = STACK_LABELS[p.stack] || '';
+    const url = status === 'running' ? s?.url : null;
+    $('#ph-preview').hidden = !url;
+    $('#ph-url').textContent = url || '';
+    $('#ph-url').title = url || '';
     if (s) requestAnimationFrame(() => s.fit.fit());
   }
 
@@ -286,6 +331,19 @@
     if (consoleView === 'logs') s.logs.scrollTop = s.logs.scrollHeight;
   }
 
+  // Debounced scan of the rendered terminal. Sticky: a TUI redraw that hides the URL
+  // (e.g. switching Shopify CLI tabs) keeps the best one found so far.
+  function scheduleUrlScan(s) {
+    clearTimeout(s.urlTimer);
+    s.urlTimer = setTimeout(() => {
+      const found = pickPreviewUrl(bufferLines(s.term));
+      if (!found || found.score < s.urlScore || found.url === s.url) return;
+      s.url = found.url;
+      s.urlScore = found.score;
+      renderHeader();
+    }, 300);
+  }
+
   async function launch(id) {
     const p = byId(id);
     if (!p) return;
@@ -303,6 +361,9 @@
     selectedId = id;
     s.startedAt = new Date();
     s.command = p.command || '';
+    clearTimeout(s.urlTimer);
+    s.url = null;
+    s.urlScore = 0;
     render();
     s.fit.fit();
     s.term.writeln(`\x1b[90m[QuickPo] ${p.path}\x1b[0m`);
@@ -334,6 +395,7 @@
     if (!s) return;
     s.term.write(data);
     appendLog(s, data);
+    scheduleUrlScan(s);
   });
   api.pty.onExit(({ id, code }) => {
     const s = sessions.get(id);
@@ -348,6 +410,18 @@
   $('#ph-edit').onclick = () => openDialog(byId(selectedId));
   $('#ph-toggle').onclick = () => (statusOf(selectedId) === 'running' ? stop(selectedId) : launch(selectedId));
   $('#ph-copy').onclick = () => navigator.clipboard.writeText(byId(selectedId).path);
+  $('#ph-url-copy').onclick = async (e) => {
+    const url = sessions.get(selectedId)?.url;
+    if (!url) return;
+    await navigator.clipboard.writeText(url);
+    const b = e.currentTarget;
+    b.textContent = '✓ Copied';
+    setTimeout(() => (b.innerHTML = '&#10697; Copy URL'), 1200);
+  };
+  $('#ph-url-open').onclick = () => {
+    const url = sessions.get(selectedId)?.url;
+    if (url) api.shell.openUrl(url);
+  };
   $('#clear-btn').onclick = () => {
     const s = sessions.get(selectedId);
     if (!s) return;

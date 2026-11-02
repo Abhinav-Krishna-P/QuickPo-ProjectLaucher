@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('quickpo', {
     openFolder: (root) => ipcRenderer.invoke('projects:openFolder', root),
   },
   env: { info: () => ipcRenderer.invoke('env:info') },
+  shell: { openUrl: (url) => ipcRenderer.invoke('shell:openUrl', url) },
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
     set: (patch) => ipcRenderer.invoke('settings:set', patch),

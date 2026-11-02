@@ -88,6 +88,10 @@ function registerIpc() {
     return true;
   });
   ipcMain.handle('projects:openFolder', (_e, root) => shell.openPath(root));
+  ipcMain.handle('shell:openUrl', (_e, url) => {
+    if (!/^https?:\/\//i.test(String(url))) throw new Error('Only http(s) URLs can be opened.');
+    return shell.openExternal(url);
+  });
 
   ipcMain.handle('settings:get', () => store.getSettings());
   ipcMain.handle('settings:set', (_e, patch) => {
